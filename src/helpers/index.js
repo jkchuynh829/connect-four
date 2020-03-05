@@ -61,6 +61,76 @@ export const isValidState = (gameState) => {
 };
 
 /**
+ * Determines four in a row horizontally
+ * @param {array} gameState 
+ * @return {bool}
+ */
+export const checkWinHorizontal = (gameState) => {
+  const highestConsecutive = gameState.map((row) => {
+    return row.reduce((acc, curr, i, a) => {
+      if (acc >= 4) return acc;
+      if (!curr) return 0;
+      if (i === 0) return 1;
+      return curr === a[i - 1] ? acc + 1 : 1;
+    }, 0);
+  });
+
+  return Math.max(...highestConsecutive) >= 4;
+}
+
+/**
+ * Checks for four in a row diagonally (down/right)
+ * @param {array} gameState 
+ */
+export const checkWinDiagnolDownRight = (gameState) => {
+  return gameState.reduce((outerBool, row, rowIndex, outerArr) => {
+    if (outerBool) return outerBool; // Only requires one instance of a win condition
+    return row.reduce((innerBool, col, colIndex) => {
+      if (innerBool) return innerBool; // Only requires one instance of a win condition
+      if (!col || rowIndex > 2 || colIndex > 3) return false; // Add constraints to row and columns where a win condition can exist
+      if (
+        col === outerArr[rowIndex + 1][colIndex + 1] // Compare value that is in the next row to the right
+        && col === outerArr[rowIndex + 2][colIndex + 2]
+        && col === outerArr[rowIndex + 3][colIndex + 3]
+      ) return true;
+      return innerBool;
+    }, false);
+  }, false);
+}
+
+/**
+ * Checks for four in a row diagonally (up/right)
+ * @param {array} gameState 
+ */
+export const checkWinDiagnolUpRight = (gameState) => {
+  return gameState.reduce((outerBool, row, rowIndex, outerArr) => {
+    if (outerBool) return outerBool; // Only requires one instance of a win condition
+    return row.reduce((innerBool, col, colIndex) => {
+      if (innerBool) return innerBool; // Only requires one instance of a win condition
+      if (!col || rowIndex < 3 || colIndex > 3) return false;
+      if (
+        col === outerArr[rowIndex - 1][colIndex + 1] // Compare value that is in the next row to the right
+        && col === outerArr[rowIndex - 2][colIndex + 2]
+        && col === outerArr[rowIndex - 3][colIndex + 3]
+      ) return true;
+      return innerBool;
+    }, false);
+  }, false);
+}
+
+/**
+ * Checks for four in a row horizontally, verticaly and in diagnols
+ * @param {array} gameState 
+ */
+export const hasWinner = (gameState) => {
+  const transposedGameState = _.zip(...gameState);
+  return checkWinHorizontal(gameState)
+    || checkWinHorizontal(transposedGameState)
+    || checkWinDiagnolDownRight(gameState)
+    || checkWinDiagnolUpRight(gameState);
+};
+
+/**
  * Logic for updating rows
  * @param {array} curr 
  * @param {array} next 
@@ -83,29 +153,6 @@ const updateRow = (curr, next, col, player) => {
 };
 
 /**
- * Determines four in a row horizontally
- * @param {array} gameState 
- * @return {bool}
- */
-export const checkWinHorizontal = (gameState) => {
-  const highestConsecutive = gameState.map((row) => {
-    return row.reduce((acc, curr, i, a) => {
-      if (acc >= 4) return acc;
-      if (!curr) return 0;
-      if (i === 0) return 1;
-      return curr === a[i - 1] ? acc + 1 : 1;
-    }, 0);
-  });
-
-  return Math.max(...highestConsecutive) >= 4;
-}
-
-export const hasWinner = (gameState) => {
-  const transposedGameState = _.zip(...gameState);
-  return checkWinHorizontal(gameState) || checkWinHorizontal(transposedGameState);
-};
-
-/**
  * Return updated game state
  * @param {object} action
  * @param {array} action.gameState 
@@ -117,3 +164,13 @@ export const play = ({ gameState, player, column }) => {
     updateRow(row, arr[i + 1], column, player));
   return isValidState(newState) ? newState : gameState;
 };
+
+/**
+ * 
+ */
+export const scratch = (gameState) => {
+  const flattenedArray = gameState.flat();
+  const playCount = flattenedArray.filter((play) => !!play).length;
+  const valid = isValidState(gameState);
+  return valid && playCount >= 42 && !hasWinner(gameState);
+}
