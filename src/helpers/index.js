@@ -82,7 +82,11 @@ const updateRow = (curr, next, col, player) => {
   return curr;
 };
 
-
+/**
+ * Determines four in a row horizontally
+ * @param {array} gameState 
+ * @return {bool}
+ */
 export const checkWinHorizontal = (gameState) => {
   const highestConsecutive = gameState.map((row) => {
     return row.reduce((acc, curr, i, a) => {
